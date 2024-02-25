@@ -2,6 +2,7 @@ package com.jogo.forca
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -12,11 +13,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,36 +42,61 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Lista de palavras
+val wordList = listOf(
+        "CASA", "BOLA", "MESA", "CADEIRA", "SOFA", "BONÉ", "ANEL", "CHAVE", "ROUPA", "RELÓGIO",
+        "LIVRO", "TESOURA", "COPO", "XÍCARA", "GARFO", "FACA", "COLHER", "PRATO", "TRAVESSEIRO", "COBERTOR",
+        "CANETA", "LÁPIS", "BORRACHA", "PAPEL", "CADERNO", "GELADEIRA", "FOGÃO", "CAMA", "CABIDE", "ESPONJA",
+        "TOALHA", "CORTINA", "BOLSA", "CARRO", "MOTO", "BICICLETA", "VIOLÃO", "GUITARRA", "CELULAR", "LAPTOP",
+        "TECLADO", "MOUSE", "SAPATO", "MEIA", "CALÇA", "SHORTS", "JAQUETA", "CAMISA", "SAIA", "VESTIDO",
+        "BOLSA", "CARTEIRA", "LENÇO", "FIVELA", "ANEL", "BRINCO", "COLAR", "PULSEIRA", "CINTO", "CUECA",
+        "BIQUÍNI", "SUNGA", "MANTO", "CÁLICE", "PANELA", "CUMBUCO", "CUIA", "CARTÃO", "FLORES", "ESPELHO",
+        "TAPETE", "ESTANTE", "QUADRO", "MOLDURA", "VASSOURA", "RODO", "ESCORREDOR", "GARRAFA", "VASO", "MESA",
+        "CADEIRA", "SOFA", "ARMÁRIO", "GAVETA", "PRATELEIRA", "FONE", "SPEAKER", "LIVRO", "REVISTA", "JORNAL",
+        "TABLET", "CONECTOR", "CABO", "CACHORRO", "GATO", "PÁSSARO", "PEIXE", "TARTARUGA", "HAMSTER", "CACHIMBO",
+        "CHARUTO", "ISQUEIRO", "VELA", "LANTERNA", "MOSQUITEIRO", "CAMPAINHA", "PORTA", "JANELA", "CORTINA", "CHUVEIRO",
+        "TORNEIRA", "RÁDIO", "TV", "DVD", "CD", "MP3", "GPS", "ÓCULOS", "RELÓGIO", "BRINQUEDO", "BONECA",
+        "CARRINHO", "QUEBRA-CABEÇA", "PISTOLA", "FACA", "ESPADA", "ARCO", "FLECHA", "LANÇA", "BOLA", "RAQUETE",
+        "REDE", "CAMA", "BANHEIRA", "PIA", "ESPELHO", "PRATELEIRA", "ARMÁRIO", "QUADRO", "COFRE", "BAÚ",
+        "TAMPA", "JARRA", "BULE", "COPO", "XÍCARA", "GARFO", "COLHER", "PRATO", "TRAVESSEIRO", "LENÇOL",
+        "EDREDOM", "TRAVESSEIRO", "COBERTOR", "SAPATO", "TÊNIS", "SANDÁLIA", "SAPATILHA", "MEIA", "CHINELO", "TOALHA",
+        "CORTINA", "LAVATÓRIO", "ESCOVA", "PASTA", "DENTAL", "FIO", "DENTAL", "FIO", "DENTAL", "ESCOVA",
+        "DEPILADOR", "PINÇA", "MÁQUINA", "CORTAR", "CABELO", "SECADOR", "ESCOVA", "CREME", "HIDRATANTE", "XAMPU",
+        "CONDICIONADOR", "SABONETE", "PENTE", "GRAMPO", "TIARA", "ANEL", "PULSEIRA", "COLAR", "BRINCO", "MAQUIAGEM",
+        "BATOM", "SOMBRA", "RÍMEL", "LÁPIS", "BLUSH", "BASE", "ESMALTE", "LIXA", "PERFUME", "DESODORANTE"
+)
+
+// Função para selecionar uma palavra aleatória da lista
+
+
+// Função para verificar se todas as letras da palavra foram adivinhadas
+fun allLettersGuessed(word: String, guessedLetters: Set<Char>): Boolean {
+    return word.all { it in guessedLetters }
+}
 
 
 @SuppressLint("MutableCollectionMutableState")
 @Composable
 fun HangmanGame() {
-    var word by remember { mutableStateOf("BERNARDO") }
-    var guessedLetters by remember { mutableStateOf(mutableSetOf<Char>()) }
+    var word by remember { mutableStateOf(getRandomWord()) }
+//    var guessedLetters by remember { mutableStateOf(mutableSetOf<Char>()) }
     var incorrectGuesses by remember { mutableStateOf(0) }
-    val alphabet = ('A'..'Z').toList()
+    var guessedLetters = remember { mutableStateOf(setOf<Char>()) }
 
+
+
+
+    val alphabet = ('A'..'Z').toList()
+    val context = LocalContext.current
     Column(
         modifier = Modifier
-            .padding(16.dp)
+            .padding(2.dp)
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Mostrar a palavra com espaços para letras não reveladas
-        Text(fontSize = 50.sp,
-            text = buildString {
-                word.forEach { char ->
-                    if (guessedLetters.contains(char)) {
-                        append("$char ")
-                    } else {
-                        append("_ ")
-                    }
-                }
-            },
-            fontWeight = FontWeight.Bold
-        )
+
+
 
         // Grid com letras do alfabeto
         LazyColumn(
@@ -81,22 +109,54 @@ fun HangmanGame() {
                         AlphabetButton(
                             letter = letter,
                             onClick = {
-                                if (!guessedLetters.contains(letter)) {
-                                    guessedLetters.add(letter)
+                                if (!guessedLetters.value.contains(letter)) {
+                                    val newGuessed = guessedLetters.value + setOf(letter)
+
+                                    guessedLetters.value = newGuessed.toSet()
+//                                    guessedLetters.add(letter)
                                     if (!word.contains(letter)) {
                                         incorrectGuesses++
                                     }
                                 }
+
+                                // Verificar se todas as letras foram adivinhadas
+                                if (allLettersGuessed(word, guessedLetters.value)) {
+                                    // Exibir uma mensagem indicando que o jogador ganhou
+                                    Toast.makeText(
+                                        context,
+                                        "Parabéns! Você acertou! A palavra era $word.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    guessedLetters.value = emptySet()
+                                    incorrectGuesses = 0
+                                    word = getRandomWord()
+                                }
                             },
-                            enabled = !guessedLetters.contains(letter)
+                            enabled = !guessedLetters.value.contains(letter)
                         )
                     }
                 }
             }
         }
 
+
+
         // Boneco da forca
         Hangman(incorrectGuesses = incorrectGuesses)
+
+        // Mostrar a palavra com espaços para letras não reveladas
+        Text(fontSize = 50.sp,
+            text = buildString {
+                word.forEach { char ->
+                    if (guessedLetters.value.contains(char)) {
+                        append("$char ")
+                    } else {
+                        append("_ ")
+                    }
+                }
+            },
+            fontWeight = FontWeight.Bold
+        )
 
         // Exibir pop-up de fim de jogo se o jogador perdeu
         if (incorrectGuesses >= 6) {
@@ -107,8 +167,9 @@ fun HangmanGame() {
                 confirmButton = {
                     Button(
                         onClick = {
-                            guessedLetters.clear()
+                            guessedLetters.value = emptySet()
                             incorrectGuesses = 0
+                            word = getRandomWord()
                         }
                     ) {
                         Text(text = "Novo Jogo")
@@ -128,8 +189,12 @@ fun AlphabetButton(letter: Char, onClick: () -> Unit, enabled: Boolean) {
             .size(52.dp),
         enabled = enabled
     ) {
-        Text(text = letter.toString(), color = Color.Black)
+        Text(text = letter.toString(), color = Color.White)
     }
+}
+
+fun getRandomWord(): String {
+    return wordList.random()
 }
 
 @Composable
@@ -148,24 +213,26 @@ fun Hangman(incorrectGuesses: Int) {
     }
 
     Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxWidth()
+            .padding(top = 50.dp),
+        contentAlignment = Alignment.Center,
+
     ) {
         Canvas(modifier = Modifier.size(200.dp)) {
             drawLine(
-                color = Color.Black,
+                color = darkColorScheme().primary,
                 start = Offset(200f, 0f),
-                end = Offset(200f, 220f),
+                end = Offset(200f, 280f),
                 strokeWidth = 20f
             )
             drawLine(
-                color = Color.Black,
+                color = darkColorScheme().primary,
                 start = Offset(190f, 0f),
                 end = Offset(300f, 0f),
                 strokeWidth = 20f
             )
             drawLine(
-                color = Color.Black,
+                color = darkColorScheme().primary,
                 start = Offset(300f, -10f),
                 end = Offset(300f, 40f),
                 strokeWidth = 20f
@@ -174,38 +241,38 @@ fun Hangman(incorrectGuesses: Int) {
             visibleParts.forEach { part ->
                 when (part) {
                     "O" -> drawCircle(
-                        color = Color.Black,
+                        color = darkColorScheme().primary,
                         radius = 30f,
                         center = Offset(300f, 70f)
                     )
                     "|" -> drawLine(
-                        color = Color.Black,
+                        color = darkColorScheme().primary,
                         start = Offset(300f, 100f),
                         end = Offset(300f, 220f),
                         strokeWidth = 20f
                     )
                     "/" -> drawLine(
-                        color = Color.Black,
+                        color = darkColorScheme().primary,
                         start = Offset(300f, 100f),
                         end = Offset(220f, 130f),
                         strokeWidth = 16f
                     )
                     "\\" -> drawLine(
-                        color = Color.Black,
+                        color = darkColorScheme().primary,
                         start = Offset(300f, 100f),
                         end = Offset(380f, 130f),
                         strokeWidth = 16f
                     )
                     "//" -> drawLine(
-                        color = Color.Black,
+                        color = darkColorScheme().primary,
                         start = Offset(300f, 210f),
-                        end = Offset(230f, 330f),
+                        end = Offset(230f, 280f),
                         strokeWidth = 16f
                     )
                     "\\/" -> drawLine(
-                        color = Color.Black,
+                        color = darkColorScheme().primary,
                         start = Offset(300f, 210f),
-                        end = Offset(370f, 330f),
+                        end = Offset(370f, 280f),
                         strokeWidth = 16f
                     )
                 }
