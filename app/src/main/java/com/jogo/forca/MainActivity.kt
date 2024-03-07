@@ -92,7 +92,7 @@ fun HangmanGame() {
         modifier = Modifier
             .padding(2.dp)
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
@@ -214,11 +214,11 @@ fun Hangman(incorrectGuesses: Int) {
 
     Box(
         modifier = Modifier.fillMaxWidth()
-            .padding(top = 50.dp),
+            .padding(top = 20.dp),
         contentAlignment = Alignment.Center,
 
     ) {
-        Canvas(modifier = Modifier.size(200.dp)) {
+        Canvas(modifier = Modifier.size(150.dp)) {
             drawLine(
                 color = darkColorScheme().primary,
                 start = Offset(200f, 0f),
